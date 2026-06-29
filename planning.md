@@ -49,6 +49,18 @@ The system also keeps an audit log of every classification, allows users to appe
 
 ---
 
+## Architecture
+
+### Submission Flow
+
+![Submission Flow](images/submission_flow.png)
+
+### Appeal Flow
+
+![Appeal Flow](images/appeal_flow.png)
+
+---
+
 # 2. Detection Signals
 
 The classifier uses two independent signals.
@@ -71,6 +83,8 @@ The prompt sent to Groq should:
 * return JSON only
 * include a short explanation whenever confidence is low
 
+**Blind spots:** This signal struggles with lightly edited AI text — if a human rewrites a few sentences of AI output, the LLM may classify the whole piece as human-written. It can also be inconsistent across runs since it relies on probabilistic model output.
+
 ---
 
 ## Signal B — Stylometric Analysis
@@ -90,6 +104,8 @@ It returns:
   "metrics": { ... }
 }
 ```
+
+**Blind spots:** Formal human writing (academic papers, legal text) often has uniform sentence structure and high vocabulary consistency, which looks AI-like to these heuristics. Conversely, creative or intentionally chaotic AI output may score as human. This signal also needs sufficient text length to be reliable — very short submissions produce noisy metrics.
 
 ---
 
