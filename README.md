@@ -331,11 +331,28 @@ Below are sample log entries showing an initial classification, the correspondin
   "creator_id": "test-user-1",
   "attribution": "uncertain",
   "confidence": 0.672,
+  "signal_outputs": {
+    "llm": {
+      "attribution": "likely_ai",
+      "llm_score": 0.8
+    },
+    "stylometric": {
+      "stylometric_score": 0.372,
+      "metrics": {
+        "avg_sentence_length": 16,
+        "sentence_length_variance": 36,
+        "type_token_ratio": 0.875,
+        "punctuation_density": 0.005
+      }
+    }
+  },
   "label": "Uncertain: The system could not confidently determine whether this was written by AI or a human. A human review may help resolve this.",
   "status": "under_review",
   "appeal_reasoning": "I wrote this myself from personal experience."
 }
 ```
+
+The appeal entry carries forward the original `signal_outputs` so each log entry is self-contained — a reviewer doesn't need to cross-reference an earlier entry to see what evidence drove the decision being appealed.
 
 ```json
 {

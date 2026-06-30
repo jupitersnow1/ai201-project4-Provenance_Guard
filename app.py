@@ -206,6 +206,7 @@ def appeal():
         "creator_id": creator_id,
         "attribution": original_entry["attribution"],
         "confidence": original_entry["confidence"],
+        "signal_outputs": original_entry["signal_outputs"],
         "label": original_entry["label"],
         "status": "under_review",
         "appeal_reasoning": creator_reasoning,
