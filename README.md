@@ -411,6 +411,8 @@ One thing I learned during testing was that short AI-generated submissions creat
 
 Rather than changing the scoring formula to fit one specific example, I decided to document this limitation instead. I think that better reflects the system's actual behavior and keeps the evaluation more honest.
 
+The planning document also called for AI-generated unit tests for `combine_scores()` (section 9, Milestone 4). In practice, I verified the function by running 4 deliberately chosen inputs through the live `/submit` endpoint and inspecting both the response and the audit log, rather than writing standalone unit tests. This caught the same calibration issue a unit test would have, but as an integration-level check across the full pipeline rather than an isolated test of one function.
+
 ---
 
 # AI Usage
