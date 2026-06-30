@@ -6,12 +6,21 @@ import statistics
 from datetime import datetime, timezone
 
 from flask import Flask, request, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 from groq import Groq
 
 load_dotenv()
 
 app = Flask(__name__)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -129,7 +138,19 @@ def read_audit_log(limit=50):
     return entries[-limit:]
 
 
+def find_classification_entry(content_id):
+    if not os.path.exists(AUDIT_LOG_FILE):
+        return None
+    with open(AUDIT_LOG_FILE, "r") as f:
+        entries = [json.loads(line) for line in f if line.strip()]
+    for entry in reversed(entries):
+        if entry["content_id"] == content_id and entry["status"] == "classified":
+            return entry
+    return None
+
+
 @app.route("/submit", methods=["POST"])
+@limiter.limit("10 per minute;100 per day")
 def submit():
     data = request.get_json()
     if not data or "text" not in data:
@@ -162,6 +183,39 @@ def submit():
         "attribution": attribution,
         "confidence": confidence,
         "label": label,
+    })
+
+
+@app.route("/appeal", methods=["POST"])
+def appeal():
+    data = request.get_json()
+    if not data or "content_id" not in data or "creator_reasoning" not in data:
+        return jsonify({"error": "Missing 'content_id' or 'creator_reasoning' field"}), 400
+
+    content_id = data["content_id"]
+    creator_id = data.get("creator_id", "anonymous")
+    creator_reasoning = data["creator_reasoning"]
+
+    original_entry = find_classification_entry(content_id)
+    if original_entry is None:
+        return jsonify({"error": "No classification found for this content_id"}), 404
+
+    audit_entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "content_id": content_id,
+        "creator_id": creator_id,
+        "attribution": original_entry["attribution"],
+        "confidence": original_entry["confidence"],
+        "label": original_entry["label"],
+        "status": "under_review",
+        "appeal_reasoning": creator_reasoning,
+    }
+    write_audit_entry(audit_entry)
+
+    return jsonify({
+        "message": "Appeal received",
+        "content_id": content_id,
+        "status": "under_review",
     })
 
 
